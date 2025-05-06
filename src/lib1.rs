@@ -1,6 +1,6 @@
 use std::char;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 use regex::Regex;
 
 
@@ -120,4 +120,46 @@ pub fn repeating_key_xor(value: &str, key: &str) -> Result<String, &'static str>
             Ok(some) => Ok(hex::encode(some)),
             Err(_) => Err("Error when repeating xor.")
         }
+}
+
+
+
+// Hamming Distance function 
+pub fn hamming_distance(value1: &str, value2: &str) -> Result<i32, &'static str> {
+        
+        if value1.len() != value2.len() {
+                return Err("Two sequences should be of same length")
+        }
+
+        let bits1 = value1.chars().map(|c| format!("{:08b}", c as u8)).collect::<Vec<String>>().join("");
+        let bits2 = value2.chars().map(|c| format!("{:08b}", c as u8)).collect::<Vec<String>>().join("");
+
+        let mut hamming_distance = 0;
+        for (c1, c2) in bits1.chars().zip(bits2.chars()) {
+                if c1 != c2 {
+                        hamming_distance = hamming_distance + 1;
+                }
+        }
+
+        Ok(hamming_distance)
+        
+}
+
+
+// Challenge 6 - Decrypt test-2.txt
+pub fn decrypt_file() -> Result<(), &'static str> {
+        let file = match File::open("src/test-files/test-2.txt") {
+                Ok(some) => some,
+                Err(_) => return Err("Couldn't read file! ")
+        };
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let content = contents.replace("\n", "").replace("\r", "");
+
+
+
+
+
+
+
 }

@@ -1,12 +1,11 @@
-use lib1::repeating_key_xor;
+use lib1::{hamming_distance, repeating_key_xor};
 
 mod lib1;
 
 fn main() {
-   let string = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal".to_owned();
-   match repeating_key_xor(&string, "ICE") {
-    Ok(some) => println!("{:?}", some),
-    Err(some) => println!("{:?}", some)
-   }
+   let value1 = "this is a test";
+   let value2 = "wokka wokka!!!";
+   
+   let hello = hamming_distance(value1, value2);
 }
 

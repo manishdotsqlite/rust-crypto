@@ -56,7 +56,7 @@ pub fn single_byte_xor_cipher(hex: &str) {
                         Ok(some) => some,
                         Err(_) => "Couldn't xor string.".to_owned(),
                 };
-                if indiv_string != "Couldn't xor string." && !indiv_string.contains("u{") {
+                if indiv_string != "Couldn't xor string." && !indiv_string.contains("u{")  {
                         println!("Index: {:?}, Deciphered String: {:?}", i, indiv_string);
                 }
         }
@@ -145,21 +145,81 @@ pub fn hamming_distance(value1: &str, value2: &str) -> Result<i32, &'static str>
         
 }
 
+fn vector_to_matrix(data: Vec<u8>, rows: usize, cols: usize) -> Vec<Vec<u8>> {
+        let mut matrix = Vec::new();
+
+        for i in 0..rows {
+                let start = i * cols;
+                let end = std::cmp::min(start + cols, data.len());
+                matrix.push(data[start..end].to_vec());
+        }
+
+        matrix
+} 
+
+fn transpose_matrix(matrix: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+        if matrix.is_empty() {
+                return matrix;
+        }
+
+        let rows = matrix.len();
+        let cols = matrix[0].len();
+
+        let mut transposed = vec![vec![None; rows]; cols];
+
+        for i in 0..rows {
+                for j in 0..cols {
+                        transposed[j][i] = Some(matrix[i][j].clone());
+                }
+        }
+
+        transposed.into_iter().map(|row| {
+                row.into_iter().flatten().collect()
+        }).collect()
+}
+
 
 // Challenge 6 - Decrypt test-2.txt
 pub fn decrypt_file() -> Result<(), &'static str> {
-        let file = match File::open("src/test-files/test-2.txt") {
+        let mut file = match File::open("src/test-files/test-2.txt") {
                 Ok(some) => some,
                 Err(_) => return Err("Couldn't read file! ")
         };
         let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
+        file.read_to_string(&mut contents) ;
         let content = contents.replace("\n", "").replace("\r", "");
+        let content_bytes = content.into_bytes();
 
 
+        let mut normalization_vec: Vec<i32> = Vec::new();
+        for i in 2..=50 {
+                let first_n_bytes = match String::from_utf8(content_bytes[..i].to_vec()) {
+                        Ok(some) => some,
+                        Err(_) => return Err("Error 101!")
+                };
+                let second_n_bytes = match String::from_utf8(content_bytes[i..2 * i].to_vec()) {
+                        Ok(some) => some,
+                        Err(_) => return Err("Error 102!")
+                };;
+                let hamming_distance = hamming_distance(&first_n_bytes, &second_n_bytes)?;
+                normalization_vec.push(hamming_distance);
+        }
 
+        normalization_vec.sort();
+        let content_length = content_bytes.len();
+        let average_normalization = ((normalization_vec[0] + normalization_vec[1] + normalization_vec[2] + normalization_vec[3]) / 4) as usize ;
+        let matrix = vector_to_matrix(content_bytes, average_normalization, content_length/average_normalization);
+        let transpose = transpose_matrix(matrix);
 
+        for row in transpose {
+                let row_string = match String::from_utf8(row) {
+                        Ok(some) => some,
+                        Err(_) => return Err("Error 103!")
+                };
+                println!("LINE: {:?}", &row_string);
+                single_byte_xor_cipher(&row_string);
+        }
 
-
-
+        Ok(())
+        
 }
